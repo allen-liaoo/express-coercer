@@ -1,0 +1,8 @@
+/tests
+/dist
+.eslintrc.cjs
+.gitignore
+**/node_modules
+todo
+.DS_Store
+**.tgz

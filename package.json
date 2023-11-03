@@ -1,0 +1,32 @@
+{
+  "name": "express-coercer-validator",
+  "version": "0.0.1",
+  "description": "",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "test": "",
+    "build": "tsc"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/allen-liaoo/express-coercer-validator.git"
+  },
+  "keywords": [
+    "express",
+    "validator",
+    "coercer"
+  ],
+  "author": "allenliao",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/allen-liaoo/express-coercer-validator/issues"
+  },
+  "homepage": "https://github.com/allen-liaoo/express-coercer-validator#readme",
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.9.1",
+    "@typescript-eslint/parser": "^6.9.1",
+    "eslint": "^8.52.0",
+    "typescript": "^5.2.2"
+  }
+}
