@@ -6,6 +6,7 @@ import {
     search,
     SearchLocation,
     coerce,
+    validate,
     Format
 } from "express-coercer"
 
@@ -16,32 +17,46 @@ app.use(express.urlencoded({extended:true}))
 
 app.use("/:abc", (req, res, next) => {
     req.body = {
-        a: 4,
-        b: 4,
+        a: "1.",
+        b: true,
+        c: "true",
+        e: 0,
         test: {
-            a: 5,
+            a: "0.2",
             b: 3,
-            test: [
-                [{a: "+1"}, {c: 5}, 6],
-                {b: 3, d: [{c: 2}]},
-            ]
-        }
+            c: "false",
+            c1: "true",
+            d: "true1",
+            test: {
+                a: 1,
+                b: "false"
+            }
+        },
+        arr: ["true", "false", 0, 1, true, false]
     }
-    req.query = {b: {b: {a: 2, d: {a:4}}}}
+    req.body1 = JSON.parse(JSON.stringify(req.body))
     next()
 })
 
+// app.use(search({
+//     locations: [
+//         SearchLocation.All,
+//     ],
+//     targets: "a",
+//     recDepth: -1,
+//     searchArray: true
+// }), coerce(Format.PosInt))
+
 app.use(search({
-    locations: [
-        SearchLocation.All
-    ],
-    targets: "a",
+    locations: SearchLocation.All,
     recDepth: -1,
     searchArray: true
-}), coerce(Format.PosInt))
+}), coerce(Format.Boolean), validate())
 
 app.use((req, res) => {
-    res.status(200).json(req.body)
+    res.status(200).json({before: req.body1, after: req.body, coercer: req.coercer})
+    console.log("Result")
+    console.log(JSON.stringify(req.body, undefined, 1))
 })
 
 app.listen(3000, () => {console.log("test app is listening on port 3000!")})

@@ -1,9 +1,7 @@
-export * as Parser from './parsers/parser'
+export * as Default from './default_coercers'
 
 export { 
-    Format,
-    CoerceOptions,
-    coerce,
+    coerce
 } from './coercer'
 
 export {
@@ -12,8 +10,6 @@ export {
     search
 } from './searcher'
 
-// export * from './validator'
+export * from './validator'
 
-export {
-    ExpressCoercer
-} from './expressCoercer'
+export * from './types'

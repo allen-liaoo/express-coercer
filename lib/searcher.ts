@@ -1,5 +1,5 @@
-import { ExpressCoercer } from "./expressCoercer"
-// To refer to req.body location, either TargetLocation.Body or "body" is accepted
+import { ExpressCoercer } from "./types"
+// To refer to req.body location, either SearchLocation.Body or "body" is accepted
 export const SearchLocation = {
     Body: 'body',
     Query: 'query',
@@ -13,116 +13,118 @@ export type SearchLocation = typeof SearchLocation[
     keyof typeof SearchLocation
 ]
 // we take those keys as strings, and do a lookup to find its values which we set as the type
-// Target acts like an enum or an union type of strings
+// SearchLocation acts like an enum or an union type of strings
 
 const SearchLocations = ['body', 'query', 'params', 'all']
 
-export function isTargetLocation(value: any) : value is SearchLocation {
+export function isSearchLocation(value: any) : value is SearchLocation {
     if (typeof value === 'string' &&
         SearchLocations.includes(value))
         return true
     return false
 }
 
+export interface SearchOptions {
+    locations?: SearchLocation | SearchLocation[] | object | object[],
+    keys?: string | string[],
+    recDepth?: number, 
+    searchArray?: boolean
+}
+
+export type SearchCallback = (keyName: string, value: any) => any
+
+/* Middleware */
 /*
-locations: location to find value to validate (default: TargetLocation.All)
+The searcher provides mechanisms to find values to coerce.
+Use this function prior to the other middlewares to initialize the mechanisms for coercion
+Call this sets up the req.coercer object used by coerce(). If a req.coercer object is already present, it is overriden.
+It implicitly has two modes:
+1. Key mode – Searches for any object with a certain key name
+2. No-Key mode – Iterates through any value in objects or arrays
+
+options is a SearchOption, which include the following fields:
+locations: location to find value to validate (default: SearchLocation.All)
 recDepth: the depth to do the recursive search (default: 0). 
     recDepth decrements by 1 everytime the searching function enters a nested object.
     If recDepth > 0, then the recursive search will enter exactly "recDepth" levels of nested objects
     If recDepth = 0, then the search is not recursive
     If recDepth < 0, then there is no limit to the depth of the recursion.
     The search stops after encountering all nested objects. Be careful of cyclical objects as the search will not terminate
-targets: names of the value to look for. It can be an array of strings or a string.
-    If targets is falsey ("", [], null, undefined), the coercer is used on all applicable values
-searchArray: whether to step into arrays and search each element for a target (default: ignores arrays, false)
+keys: names of the value to look for. It can be an array of strings or a string.
+    If keys is falsey ("", [], null, undefined), searcher is in the No-Key mode
+searchArray: whether to step into arrays and search each element for a key (default: ignores arrays, false)
     Stepping into an array does not decrement recDepth. 
     However, if the array is an array of objects, then stepping into an object element decrements recDepth
-TODO: checkCycle: (result: boolean) => void | undefined
 */
-export interface SearchOptions {
-    locations?: SearchLocation | SearchLocation[] | object | object[],
-    targets?: string | string[],
-    recDepth?: number, 
-    searchArray?: boolean
-}
-
-/* Middleware */
+// TODO: checkCycle: (result: boolean) => void | undefined
 export function search(options: SearchOptions) {
     // Construct and validate search options
     const searchOptions: Required<SearchOptions> = {
         locations: SearchLocation.All,
-        targets: [],    // cannot be undefined since type is Required<T>
+        keys: [],    // cannot be undefined since type is Required<T>
         recDepth: 0,
         searchArray: false,
         ...options      // override defaults with user defined options
     }
 
     if (!Number.isInteger(searchOptions.recDepth)) {
-        throw "express-coercer: rec_depth must be an integer!"
+        throw "express-coercer: recDepth must be an integer!"
     }
 
-    // Turn targets into an array of strings
-    const targets = buildTargets(searchOptions.targets)
-    console.log(`targets: ${JSON.stringify(targets, undefined, " ")}`)
+    // Turn keys into an array of strings
+    const keys = buildKeys(searchOptions.keys)
+    console.log(`keys: ${JSON.stringify(keys, undefined, " ")}`)
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types
     return function(req: any, res: any, next: Function) {
         // The following code are request-dependent
-        if (req.expressCoercer != null) {
-            throw "express-coercer: Cannot start a new search for coercion/validation when previous search has not ended!"
-        }
-
-        // build search target objects
+        // build search locations
         const searchLocations = buildSearchLocations(searchOptions.locations, req)
         console.log(`Search locations: ${JSON.stringify(searchLocations)}`)
 
         // build search function
-        const searchRec = buildSearchFunction(searchLocations, targets, searchOptions)
+        const searchRec = buildSearchFunction(searchLocations, keys, searchOptions)
 
-        const expressCoercer: ExpressCoercer = {
+        const coercer: ExpressCoercer = {
             searchOptions: searchOptions,
             searchLocations: searchLocations,
             search: searchRec
         }
-        req.expressCoercer = expressCoercer
+        req.coercer = coercer   // might override a previous coercer object
         next()
     }
 }
 
-export function cleanup(req, res, next) {
-    req.expressCoercer = undefined
-    next()
+// Turn keys union type into an array of strings
+function buildKeys(keys: string | string[]): string[] {
+    if (Array.isArray(keys)) return keys
+    return [keys]
 }
 
-// Turn targets union type into an array of strings
-function buildTargets(targets: string | string[]): string[] {
-    if (Array.isArray(targets)) return targets
-    return [targets]
-}
-
-function buildSearchLocations(targets: SearchLocation | SearchLocation[] | object | object[], req: any): object[] {
-    // turnn targets into an array of object references
+function buildSearchLocations(keys: SearchLocation | SearchLocation[] | object | object[], req: any): object[] {
+    // turnn keys into an array of object references
     let searchLocations: any[] = [];
-    if (!Array.isArray(targets)) {
-        searchLocations = [targets]
+    if (!Array.isArray(keys)) {
+        searchLocations = [keys]     // singleton array with reference to keys
     } else {
-        searchLocations = targets
-    }
+        searchLocations = [...keys]
+        // clones keys array, where each element is copied by reference
+    }   // we want to copy each element by reference so that they point to the same object
 
     // Replace SearchLocations with object
     for (let i = 0; i < searchLocations.length; i++) {
         const t = searchLocations[i]
         console.log(`Replacing locations: ${t}`)
-        if (isTargetLocation(t)) {
+        if (isSearchLocation(t)) {
             if (t === 'all') {
                 searchLocations.splice(i,       // start in-place
                     1,                          // remove 'all'
-                    SearchLocation.Body,        // replace "all" with the three targets
+                    SearchLocation.Body,        // replace "all" with the three keys
                     SearchLocation.Query,
                     SearchLocation.Params)
                 i--     // don't increment i, redo this step at the same i
             } else {
-                // replace targets with their corresponding object in the request
+                // replace keys with their corresponding object in the request
                 searchLocations[i] = req[t]
             }
         }
@@ -131,13 +133,13 @@ function buildSearchLocations(targets: SearchLocation | SearchLocation[] | objec
 }
 
 // Returns the search function, which takes a callback of the type (value: any) => any
-function buildSearchFunction(targetLocations: object[], targets: string[], searchOptions: Required<SearchOptions>) {
+function buildSearchFunction(searchLocations: object[], keys: string[], searchOptions: Required<SearchOptions>) {
     // hasLimit is true if there is a limit to recurisve depth
     const hasLimit = (searchOptions.recDepth < 0) ? false : true
-    // noTargets is true if no targets specified--so every value is a target
-    const noTargets = !targets || (targets.length === 0)
+    // noKeys is true if no keys specified--so every value matches the search
+    const noKeys = !keys || (keys.length === 0)
 
-    function searchObject(obj: object, callback: Function, recDepth: number) {
+    function searchObject(obj: object, callback: SearchCallback, recDepth: number) {
         // If we reached recDepth and there is limit to recursion
         // Check if < 0 since if = 0, we still need to search once
         if (recDepth < 0 && hasLimit) return
@@ -145,13 +147,13 @@ function buildSearchFunction(targetLocations: object[], targets: string[], searc
         console.log(`Searching object with depth ${recDepth}: ${JSON.stringify(obj, undefined, " ")}`)
         for (const key in obj) {
             const value = obj[key]
-            // Found target
-            // Either key matches a target's name
-            // Or no targets specified, and value is not an object nor array
-            if (targets.includes(key) ||
-                (noTargets && typeof value !== 'object' && !Array.isArray(value))) {
+            // Found key
+            // Either key matches a key's name
+            // Or no keys specified, and value is not an object nor array
+            if (keys.includes(key) ||
+                (noKeys && typeof value !== 'object')) {
                 console.log(`Found: ${key}, ${value}`)
-                callback(value)
+                obj[key] = callback(key, value)
             }
 
             if (searchOptions.searchArray && Array.isArray(value)) searchArray(value, callback, recDepth)
@@ -159,15 +161,20 @@ function buildSearchFunction(targetLocations: object[], targets: string[], searc
         }
     }
 
-    function searchArray(array: any[], callback: Function, recDepth: number) {
-        for (const value of array) {
-            if (isPureObject(value)) searchObject(value, callback, recDepth-1)
-            else if (searchOptions.searchArray && Array.isArray(value)) searchArray(value, callback, recDepth)
+    function searchArray(array: any[], callback: SearchCallback, recDepth: number) {
+        for (let i = 0; i < array.length; i++) {
+            const value = array[i]
+            if (isPureObject(value))
+                searchObject(value, callback, recDepth-1)
+            else if (searchOptions.searchArray && Array.isArray(value))
+                searchArray(value, callback, recDepth)
+            else if (noKeys)
+                array[i] = callback('', value)
         }
     }
 
-    return function searchRec(callback: Function) : any {
-        for (const obj of targetLocations) {
+    return function searchRec(callback: SearchCallback) : void {
+        for (const obj of searchLocations) {
             searchObject(obj, callback, searchOptions.recDepth)
         }
     }
