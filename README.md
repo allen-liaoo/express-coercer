@@ -5,18 +5,22 @@ This is not a general purpose validator. It is meant to be used in conjunction w
 
 ## Usage
 ```js
-const express = require("express")
-const coercer = require("express-coercer")
+import express from 'express'
+import {
+    coerce,             // Provides built-in coercer functions
+    TargetLocation,     // Locations in the request object
+    Format,             // Built-in supported formats
+} from 'express-coercer'
+
 const app = express()
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
 
-app.use(coercer.validator.validate({
-    location: RequestLocation.Body,
-    name: "user_id",
-    required: true,
-    type: coercer.Types.Int,
-    coerceFunc: coercer.Coercer.stringToInt
-}))
+app.use(search({
+    locations: SearchLocation.Body,
+    targets: ["consumer_id", "provider_id"],
+    rec_depth: -1       // coerce all consumer_ids and producer_ids no matter how nested they are
+}),
+coerce(Format.PosInt))
 ```
-See this [example](./tests/app/index.js) of a simple express server.
+See this [example](./tests/app/index.js) of a simple express server (Using CommonJS modules).

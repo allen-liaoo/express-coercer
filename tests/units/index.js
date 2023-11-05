@@ -1,4 +1,7 @@
-const lib = require("express-coercer")
+import lib from "express-coercer"
+import NumberTest from "./numbers_test/number.js"
+import IntTest from "./numbers_test/int.js"
+import PosIntTest from "./numbers_test/pos_int.js"
 
 console.log(lib)
 
@@ -27,6 +30,6 @@ function testCoercer(tests) {
 }
 
 // Tests
-testCoercer(require("./numbers_test/number.js"))
-testCoercer(require("./numbers_test/int.js"))
-testCoercer(require("./numbers_test/pos_int.js"))
+testCoercer(NumberTest)
+testCoercer(IntTest)
+testCoercer(PosIntTest)
