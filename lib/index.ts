@@ -1,6 +1,6 @@
 export * as Default from './default_coercers'
 
-export { 
+export {
     coerce
 } from './coercer'
 
@@ -10,6 +10,15 @@ export {
     search
 } from './searcher'
 
-export * from './validator'
+export {
+    defaultMiddleware,
+    validate
+} from './utils'
 
-export * from './types'
+export {
+    ExpressCoercer,
+    CoerceResult,
+    CoercerFunction,
+    CoerceError,
+    Format
+} from './types'

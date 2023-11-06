@@ -5,13 +5,15 @@
   "type": "module",
   "scripts": {
     "build-lib": "cd ../ ; tsc",
-    "app": "npm run build-lib; nodemon ./app/index.js",
-    "units": "npm run build-lib; nodemon ./units/index.js"
+    "app": "npm run build-lib; nodemon ./app/main.js",
+    "example": "npm run build-lib; nodemon ./example/server.js",
+    "units": "npm run build-lib; nodemon ./units/main.js"
   },
   "dependencies": {
     "express": "^4.18.2",
+    "express-coercer": "file:../express-coercer-0.2.0.tgz",
     "nodemon": "3.0.1"
   },
   "author": "",
-  "license": "ISC"
+  "license": "MIT"
 }

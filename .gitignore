@@ -1,5 +1,9 @@
+# File types
+**.DS_Store
+**.tgz
+
+# Directories
 **/node_modules
 /dist
-todo
-.DS_Store
-**.tgz
+
+# Specific files

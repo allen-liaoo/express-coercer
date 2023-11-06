@@ -1,5 +1,6 @@
-/* eslint-disable @typescript-eslint/no-var-requires */
-// For testing by adding the library into dependencies:
+// npm run app
+// For testing only
+// Adding the library into dependencies:
 // "express-coercer": "file: ../../../../express-coercer-0.0.1.tgz"
 import express from "express"
 import {

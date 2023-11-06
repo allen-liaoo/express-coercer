@@ -1,10 +1,4 @@
-# express-coercer
-`express-coercer` is a request coercer middleware for `Express.js`. It coercers values sent in the request into specific types, and validates whether the coercion is successful.
-
-This is not a general purpose validator. It is meant to be used after Express's `body-parser`. `body-parser` turns values into strings (or object/array with string values), and this library turns the strings into the right type of values.
-
-## Usage
-```js
+// npm run example
 import express from 'express'
 import {
     SearchLocation,     // Locations in the request object like req.body
@@ -32,9 +26,9 @@ validate())
 // uses the default middleware provided by express-coercer
 // which turns strings ('true', 'false', '1', '2.5') into booleans or numbers
 app.use(defaultMiddleware())
-```
-See more [here](./tests/example)
 
-## Install
-Run  
-```$ npm install express-coercer```
+app.use('/*', (req, res) => {
+    res.status(200).json({body: req.body, coercer: req.coercer}) // nothing went wrong
+})
+
+app.listen(3000, () => {console.log("test app is listening on port 3000!")})

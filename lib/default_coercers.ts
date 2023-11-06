@@ -9,10 +9,10 @@ export function defaultCoercer(value: any) : any {
     if (typeof value === 'string') {
         try {
             value = strictStringToBoolean(value)
-        } catch { 
+        } catch (e) { 
             try {
                 value = stringToNumber(value)
-            } catch { /* empty */ }
+            } catch (e) { /* empty */ }
         }
     }
     return value

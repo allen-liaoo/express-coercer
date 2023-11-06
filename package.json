@@ -1,12 +1,11 @@
 {
   "name": "express-coercer",
-  "version": "0.0.1",
-  "description": "",
+  "version": "0.2.0",
+  "description": "A request coercer middleware for Express.js",
   "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
+  "types": "./dist/types/index.d.ts",
   "scripts": {
-    "test": "",
-    "build": "tsc"
+    "build": "rm -r dist ; tsc"
   },
   "repository": {
     "type": "git",
@@ -17,7 +16,7 @@
     "validator",
     "coercer"
   ],
-  "author": "allenliao",
+  "author": "Allen Liao",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/allen-liaoo/express-coercer/issues"

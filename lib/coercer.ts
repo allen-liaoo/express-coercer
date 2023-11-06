@@ -1,18 +1,24 @@
-import { defaultCoercer, getCoercerByFormat } from './default_coercers'
+import { getCoercerByFormat } from './default_coercers'
 import { CoerceResult, CoercerFunction, Format, isFormat } from './types'
 
 /*
-coercers: Either a Format, a Format array, a function, or a functions array (default: See defaultCoercer() in default_coercers.ts)
+coercers: Either a Format, a Format array, a function, or a functions array
     1. If coercers is a Format or a Format array: 
         The default parser for the corresponding format(s) is used (See getDefaultParser())
     2. If coercers is a function or a list of functions:
         A function should either coerces the value to some format, leave it unchanged, or throws a CoerceError
         The functions are called in the order that they are listed.
 */
-// eslint-disable-next-line @typescript-eslint/ban-types
-export function coerce(coercers?: Format | Format[] | CoercerFunction | CoercerFunction[]) {
+export function coerce(coercers: Format | Format[] | CoercerFunction | CoercerFunction[]) {
+    if (!coercers) {
+        throw "express-coercer: Must provide coercers to the coerce function!"
+    }
+
+    // Turn coercers into type Function[]
+    const coercerFuncs: any[] = buildCoercers(coercers)
+
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types
-    return function(req: any, res: any, next: Function) {
+    return function(req, res, next) {
         // ignore this if no search is set up
         if (!req.coercer) {
             next()
@@ -24,16 +30,12 @@ export function coerce(coercers?: Format | Format[] | CoercerFunction | CoercerF
         if ((!results || !Array.isArray(results)))  // if results is not set or not an array
             req.coercer.results = []
 
-        // Initialize coercers if it is not specified
-        if (coercers == undefined) coercers = defaultCoercer
-
-        // Turn coercers into type Function[]
-        const coercerFuncs: any[] = buildCoercers(coercers)
-
         // For each coercer, run the function and set the coercer result
         for (const func of coercerFuncs) {
             // wrap each coercer func inside a function that sets coerceresult
             req.coercer.search((targetName: string, value: any) => {
+                console.log(targetName)
+                console.log(typeof value)
                 // initialize coerceResult
                 const coerceRes: CoerceResult = {
                     success: true,

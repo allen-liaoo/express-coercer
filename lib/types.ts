@@ -61,7 +61,7 @@ export type Format = typeof Format[
 ]
 // we take those keys as strings, and do a lookup to find its values which we set as the type
 
-const Formats = ['number', 'integer', 'positive integer', 'string', 'char', 'boolean']
+const Formats = ['number', 'int', 'posint', 'string', 'char', 'boolean']
 
 export function isFormat(value: any) : value is Format {
     if (typeof value === 'string' &&

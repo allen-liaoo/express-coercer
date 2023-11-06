@@ -17,7 +17,7 @@ export type SearchLocation = typeof SearchLocation[
 
 const SearchLocations = ['body', 'query', 'params', 'all']
 
-export function isSearchLocation(value: any) : value is SearchLocation {
+function isSearchLocation(value: any) : value is SearchLocation {
     if (typeof value === 'string' &&
         SearchLocations.includes(value))
         return true
@@ -37,22 +37,23 @@ export type SearchCallback = (keyName: string, value: any) => any
 /*
 The searcher provides mechanisms to find values to coerce.
 Use this function prior to the other middlewares to initialize the mechanisms for coercion
-Call this sets up the req.coercer object used by coerce(). If a req.coercer object is already present, it is overriden.
+Call this sets up the req.coercer object used by coerce(). 
+If a req.coercer object is already present, it is overriden (except for its results).
 It implicitly has two modes:
 1. Key mode – Searches for any object with a certain key name
 2. No-Key mode – Iterates through any value in objects or arrays
 
 options is a SearchOption, which include the following fields:
-locations: location to find value to validate (default: SearchLocation.All)
-recDepth: the depth to do the recursive search (default: 0). 
+locations: location to find value to validate (default: SearchLocation.All, which includes request's body, query, and param)
+recDepth: the depth to do the recursive search (default: -1). 
     recDepth decrements by 1 everytime the searching function enters a nested object.
     If recDepth > 0, then the recursive search will enter exactly "recDepth" levels of nested objects
     If recDepth = 0, then the search is not recursive
     If recDepth < 0, then there is no limit to the depth of the recursion.
-    The search stops after encountering all nested objects. Be careful of cyclical objects as the search will not terminate
+    The search stops after encountering all nested objects. Be careful of cyclical objects as the search will not terminate.
 keys: names of the value to look for. It can be an array of strings or a string.
     If keys is falsey ("", [], null, undefined), searcher is in the No-Key mode
-searchArray: whether to step into arrays and search each element for a key (default: ignores arrays, false)
+searchArray: whether to step into arrays and search each element for a key (default: true)
     Stepping into an array does not decrement recDepth. 
     However, if the array is an array of objects, then stepping into an object element decrements recDepth
 */
@@ -62,8 +63,8 @@ export function search(options: SearchOptions) {
     const searchOptions: Required<SearchOptions> = {
         locations: SearchLocation.All,
         keys: [],    // cannot be undefined since type is Required<T>
-        recDepth: 0,
-        searchArray: false,
+        recDepth: -1,
+        searchArray: true,
         ...options      // override defaults with user defined options
     }
 
@@ -76,7 +77,7 @@ export function search(options: SearchOptions) {
     console.log(`keys: ${JSON.stringify(keys, undefined, " ")}`)
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types
-    return function(req: any, res: any, next: Function) {
+    return function(req, res, next) {
         // The following code are request-dependent
         // build search locations
         const searchLocations = buildSearchLocations(searchOptions.locations, req)
@@ -88,8 +89,10 @@ export function search(options: SearchOptions) {
         const coercer: ExpressCoercer = {
             searchOptions: searchOptions,
             searchLocations: searchLocations,
-            search: searchRec
+            search: searchRec,
+            results: req?.coercer?.results   // preserves previous results
         }
+
         req.coercer = coercer   // might override a previous coercer object
         next()
     }

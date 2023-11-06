@@ -1,8 +1,12 @@
+# File types
+**.DS_Store
+**.tgz
+
+# Directories
 /tests
-/dist
+**/node_modules
+
+# Specific fiels
 .eslintrc.cjs
 .gitignore
-**/node_modules
-todo
-.DS_Store
-**.tgz
+tsconfig.json
