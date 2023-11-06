@@ -1,5 +1,12 @@
 import { ExpressCoercer } from "./types"
-// To refer to req.body location, either SearchLocation.Body or "body" is accepted
+
+/*
+ * The input object to look for associated with the request
+ * Body: request.body (request body)
+ * Query: request.query (query parameter)
+ * Params: request.params (routing parameter)
+ * All: All of the above
+ */
 export const SearchLocation = {
     Body: 'body',
     Query: 'query',
@@ -24,6 +31,9 @@ function isSearchLocation(value: any) : value is SearchLocation {
     return false
 }
 
+/*
+ * Options for searching (see search())
+ */
 export interface SearchOptions {
     locations?: SearchLocation | SearchLocation[] | object | object[],
     keys?: string | string[],
@@ -35,27 +45,26 @@ export type SearchCallback = (keyName: string, value: any) => any
 
 /* Middleware */
 /*
-The searcher provides mechanisms to find values to coerce.
-Use this function prior to the other middlewares to initialize the mechanisms for coercion
-Call this sets up the req.coercer object used by coerce(). 
-If a req.coercer object is already present, it is overriden (except for its results).
-It implicitly has two modes:
-1. Key mode – Searches for any object with a certain key name
-2. No-Key mode – Iterates through any value in objects or arrays
-
-options is a SearchOption, which include the following fields:
-locations: location to find value to validate (default: SearchLocation.All, which includes request's body, query, and param)
-recDepth: the depth to do the recursive search (default: -1). 
-    recDepth decrements by 1 everytime the searching function enters a nested object.
-    If recDepth > 0, then the recursive search will enter exactly "recDepth" levels of nested objects
-    If recDepth = 0, then the search is not recursive
-    If recDepth < 0, then there is no limit to the depth of the recursion.
-    The search stops after encountering all nested objects. Be careful of cyclical objects as the search will not terminate.
-keys: names of the value to look for. It can be an array of strings or a string.
-    If keys is falsey ("", [], null, undefined), searcher is in the No-Key mode
-searchArray: whether to step into arrays and search each element for a key (default: true)
-    Stepping into an array does not decrement recDepth. 
-    However, if the array is an array of objects, then stepping into an object element decrements recDepth
+ * The searcher provides mechanisms to find values to coerce.
+ * Use this function prior to the other middlewares to initialize the mechanisms for coercion
+ * Call this sets up the req.coercer object used by coerce(). 
+ * If a req.coercer object is already present, it is overriden (except for its results).
+ * It implicitly has two modes:
+ * 1. Key mode – Searches for any object with a certain key name
+ * 2. No-Key mode – Iterates through any value in objects or arrays
+ * 
+ * options is a SearchOption, which include the following fields:
+ * locations: location to find value to validate (default: SearchLocation.All, which includes request's body, query, and param)
+ * recDepth: the depth to do the recursive search (default: -1), decrements by 1 everytime the searching function enters a nested object.
+ *      1. If recDepth > 0, then the recursive search will enter exactly "recDepth" levels of nested objects
+ *      2. If recDepth = 0, then the search is not recursive
+ *      3. If recDepth < 0, then there is no limit to the depth of the recursion.
+ *         The search stops after encountering all nested objects. Be careful of cyclical objects as the search will not terminate.
+ * keys: names of the value to look for. It can be an array of strings or a string.
+ *      If keys is falsey ("", [], null, undefined), searcher is in the No-Key mode
+ * searchArray: whether to step into arrays and search each element for a key (default: true)
+ *      Stepping into an array does not decrement recDepth. 
+ *      However, if the array is an array of objects, then stepping into an object element decrements recDepth
 */
 // TODO: checkCycle: (result: boolean) => void | undefined
 export function search(options: SearchOptions) {
@@ -74,14 +83,14 @@ export function search(options: SearchOptions) {
 
     // Turn keys into an array of strings
     const keys = buildKeys(searchOptions.keys)
-    console.log(`keys: ${JSON.stringify(keys, undefined, " ")}`)
+    // console.log(`keys: ${JSON.stringify(keys, undefined, " ")}`)
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars, @typescript-eslint/ban-types
     return function(req, res, next) {
         // The following code are request-dependent
         // build search locations
         const searchLocations = buildSearchLocations(searchOptions.locations, req)
-        console.log(`Search locations: ${JSON.stringify(searchLocations)}`)
+        // console.log(`Search locations: ${JSON.stringify(searchLocations)}`)
 
         // build search function
         const searchRec = buildSearchFunction(searchLocations, keys, searchOptions)
@@ -117,7 +126,7 @@ function buildSearchLocations(keys: SearchLocation | SearchLocation[] | object |
     // Replace SearchLocations with object
     for (let i = 0; i < searchLocations.length; i++) {
         const t = searchLocations[i]
-        console.log(`Replacing locations: ${t}`)
+        // console.log(`Replacing locations: ${t}`)
         if (isSearchLocation(t)) {
             if (t === 'all') {
                 searchLocations.splice(i,       // start in-place
@@ -147,7 +156,7 @@ function buildSearchFunction(searchLocations: object[], keys: string[], searchOp
         // Check if < 0 since if = 0, we still need to search once
         if (recDepth < 0 && hasLimit) return
 
-        console.log(`Searching object with depth ${recDepth}: ${JSON.stringify(obj, undefined, " ")}`)
+        // console.log(`Searching object with depth ${recDepth}: ${JSON.stringify(obj, undefined, " ")}`)
         for (const key in obj) {
             const value = obj[key]
             // Found key
@@ -155,7 +164,7 @@ function buildSearchFunction(searchLocations: object[], keys: string[], searchOp
             // Or no keys specified, and value is not an object nor array
             if (keys.includes(key) ||
                 (noKeys && typeof value !== 'object')) {
-                console.log(`Found: ${key}, ${value}`)
+                // console.log(`Found: ${key}, ${value}`)
                 obj[key] = callback(key, value)
             }
 

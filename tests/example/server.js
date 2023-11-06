@@ -5,7 +5,7 @@ import {
     search,             // middlware to set up the search mechanism for coercers
     coerce,             // Provides built-in coercer functions
     Format,             // Built-in supported formats
-    validate,            // utility validator provided by the library
+    validateAny,        // validator middleware
     defaultMiddleware
 } from 'express-coercer'
 
@@ -13,15 +13,17 @@ const app = express()
 app.use(express.json())
 app.use(express.urlencoded({extended: true}))
 
-// Search in the request's body for any value with keys "consumer_id" or "provider_id", and
-// coerces them to positive integers if possible
-// otherwise, use the default validator to send back a status 400 response
-app.use(search({
-    locations: SearchLocation.Body,
-    keys: ["consumer_id", "producer_id"]
-}),
-coerce(Format.PosInt),
-validate())
+app.use(
+    // Search in the request's body for any value with keys "consumer_id" or "provider_id", and
+    search({
+        locations: SearchLocation.Body,
+        keys: ["consumer_id", "producer_id"]
+    }),
+    // coerces them to positive integers if possible
+    coerce(Format.PosInt),
+    // otherwise, use the default validator to send back a status 400 response
+    validateAny
+)
 
 // uses the default middleware provided by express-coercer
 // which turns strings ('true', 'false', '1', '2.5') into booleans or numbers

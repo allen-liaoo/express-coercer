@@ -7,7 +7,7 @@ import {
     search,
     SearchLocation,
     coerce,
-    validate,
+    validateAll,
     Format
 } from "express-coercer"
 
@@ -52,7 +52,7 @@ app.use(search({
     locations: SearchLocation.All,
     recDepth: -1,
     searchArray: true
-}), coerce(Format.Boolean), validate())
+}), coerce(Format.Boolean), validateAll)
 
 app.use((req, res) => {
     res.status(200).json({before: req.body1, after: req.body, coercer: req.coercer})

@@ -1,9 +1,9 @@
 import { Format, CoerceError, CoercerFunction } from "./types"
 
 /*
-Default coercer function that turns
-1. 'true' and 'false' to boolean values
-2. Number strings (i.e. '0', '3.4', '23e5') to numbers
+ * Default coercer function that turns
+ * 1. 'true' and 'false' to boolean values
+ * 2. Number strings (i.e. '0', '3.4', '23e5') to numbers
 */
 export function defaultCoercer(value: any) : any {
     if (typeof value === 'string') {
@@ -18,6 +18,9 @@ export function defaultCoercer(value: any) : any {
     return value
 }
 
+/*
+ * Returns the default coercer corresponding to a Format
+ */
 export function getCoercerByFormat(format: Format) : CoercerFunction {
     switch (format) {
         case Format.Number: return stringToNumber
@@ -31,9 +34,9 @@ export function getCoercerByFormat(format: Format) : CoercerFunction {
 }
 
 /*
-Default for Format.Number
-Turns a string into a number, throws CoerceError if that is not possible
-Note that this function does not allow NaN and Infinity
+ * Default for Format.Number
+ * Turns a string into a number, throws CoerceError if that is not possible
+ * Note that this function does not allow NaN and Infinity
 */
 export function stringToNumber(value: any) : number {
     const expectedFormats = ["String of number", "Number"]
@@ -49,32 +52,32 @@ export function stringToNumber(value: any) : number {
 }
 
 /*
-Default for Format.Int
-Turns a string into an integer, throws CoerceError if that is not possible
-Note that this function does not allow NaN and Infinity
+ * Default for Format.Int
+ * Turns a string into an integer, throws CoerceError if that is not possible
+ * Note that this function does not allow NaN and Infinity
 */
 export function stringToInt(value: any) : number {
     value = stringToNumber(value)
     if (Number.isInteger(value)) 
         return value
-    throw new CoerceError("String of integer", "Integer number")
+    throw new CoerceError("String of integer", "Integer")
 }
 
 /*
-Default for Format.PosInt
-Turns a string into a positive integer, throws CoerceError if that is not possible
-Note that this function does not allow NaN and Infinity
+ * Default for Format.PosInt
+ * Turns a string into a positive integer, throws CoerceError if that is not possible
+ * Note that this function does not allow NaN and Infinity
 */
 export function stringToPosInt(value: any) : number {
     value = stringToInt(value)
     if (value == null || value <= 0) 
-        throw new CoerceError("String of positive integer", "Positive integer number")
+        throw new CoerceError("String of positive integer", "Positive integer")
     return value
 }
 
 /*
-Default for Format.Boolean
-Turns "true" to true and "false" to false, or throws CoerceError otherwise
+ * Default for Format.Boolean
+ * Turns "true" to true and "false" to false, or throws CoerceError otherwise
 */
 export function strictStringToBoolean(value: any) : boolean {
     if (value == 'true' || value == 'false') {
@@ -84,9 +87,9 @@ export function strictStringToBoolean(value: any) : boolean {
 }
 
 /*
-Default for Format.Char
-Turns any integer in the range specified by String.fromCharCode() to a character
-Throws CoerceError otherwise
+ * Default for Format.Char
+ * Turns any integer in the range specified by String.fromCharCode() to a character
+ * Throws CoerceError otherwise
 */
 export function intToChar(value: any) : string {
     try {
@@ -97,10 +100,10 @@ export function intToChar(value: any) : string {
 }
 
 /*
-Default for Format.String
-Turns any value to a string using JSON.stringify()
-Throws CoerceError if JSON.stringify() fails
-*/
+ * Default for Format.String
+ * Turns any value to a string using JSON.stringify()
+ * Throws CoerceError if JSON.stringify() fails
+ */
 export function anyToString(value: any) : string {
     try {
         return JSON.stringify(value)

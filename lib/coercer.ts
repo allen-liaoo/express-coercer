@@ -2,12 +2,12 @@ import { getCoercerByFormat } from './default_coercers'
 import { CoerceResult, CoercerFunction, Format, isFormat } from './types'
 
 /*
-coercers: Either a Format, a Format array, a function, or a functions array
-    1. If coercers is a Format or a Format array: 
-        The default parser for the corresponding format(s) is used (See getDefaultParser())
-    2. If coercers is a function or a list of functions:
-        A function should either coerces the value to some format, leave it unchanged, or throws a CoerceError
-        The functions are called in the order that they are listed.
+ * coercers: Either a Format, a Format array, a function, or a functions array
+ * 1. If coercers is a Format or a Format array: 
+ *      The default parser for the corresponding format(s) is used (See getDefaultParser())
+ * 2. If coercers is a function or a list of functions:
+ *      A function should either coerces the value to some format, leave it unchanged, or throws a CoerceError
+ *      The functions are called in the order that they are listed.
 */
 export function coerce(coercers: Format | Format[] | CoercerFunction | CoercerFunction[]) {
     if (!coercers) {
@@ -34,8 +34,6 @@ export function coerce(coercers: Format | Format[] | CoercerFunction | CoercerFu
         for (const func of coercerFuncs) {
             // wrap each coercer func inside a function that sets coerceresult
             req.coercer.search((targetName: string, value: any) => {
-                console.log(targetName)
-                console.log(typeof value)
                 // initialize coerceResult
                 const coerceRes: CoerceResult = {
                     success: true,

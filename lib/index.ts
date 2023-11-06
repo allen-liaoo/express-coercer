@@ -12,7 +12,8 @@ export {
 
 export {
     defaultMiddleware,
-    validate
+    validateAny,
+    validateAll
 } from './utils'
 
 export {
